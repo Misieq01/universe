@@ -9,6 +9,7 @@ import { TileItem } from '../styles';
 import { useAppStatusStore } from '@app/store/useAppStatusStore.ts';
 import { Theme, useTheme } from '@mui/material/styles';
 import { useMiningControls } from '@app/hooks/mining/useMiningControls';
+import { StyledIcon } from '@app/containers/Dashboard/MiningView/components/MiningButton.styles';
 
 const CustomSelect = styled(Select)(({ theme }: { theme: Theme }) => ({
     '& .MuiSelect-select': {
@@ -25,7 +26,7 @@ const CustomSelect = styled(Select)(({ theme }: { theme: Theme }) => ({
 
 function ModeSelect() {
     const mode = useAppStatusStore((s) => s.mode);
-    const { changeMode } = useMiningControls();
+    const { changeMode, isChangingMode } = useMiningControls();
 
     const handleChange = (event: SelectChangeEvent<unknown>) => {
         changeMode(event.target.value as modeType);
@@ -41,7 +42,8 @@ function ModeSelect() {
                     theme={theme}
                     value={mode}
                     onChange={handleChange}
-                    IconComponent={IoCode}
+                    disabled={isChangingMode}
+                    IconComponent={isChangingMode ? StyledIcon : IoCode}
                     sx={{
                         '& .MuiSelect-icon': {
                             transform: 'rotate(90deg)',

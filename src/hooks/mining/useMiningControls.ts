@@ -180,5 +180,6 @@ export function useMiningControls() {
         isWaitingForHashRate,
         shouldMiningControlsBeEnabled,
         shouldAutoMiningControlsBeEnabled,
+        isChangingMode,
     };
 }
