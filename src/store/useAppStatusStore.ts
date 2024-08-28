@@ -9,7 +9,7 @@ interface Actions {
     setAppStatus: (appStatus: AppStatus) => void;
     setApplicationsVersions: (applicationsVersions: ApplicationsVersions) => void;
     setMode: (mode: modeType) => void;
-    setConfigMode: (mode: modeType) => void;
+    setConfigMode: (mode: modeType, callback: () => void) => void;
     setMainAppVersion: (mainAppVersion: string) => void;
     setCurrentUserInactivityDuration: (duration: number) => void;
 }
@@ -37,13 +37,15 @@ export const useAppStatusStore = create<AppStatusStoreState>()(
             setApplicationsVersions: (applications_versions) => set({ applications_versions }),
             setMainAppVersion: (main_app_version) => set({ main_app_version }),
             setMode: (mode) => set({ mode }),
-            setConfigMode: async (mode) => {
+            setConfigMode: async (mode, callback) => {
                 try {
                     await invoke('set_mode', { mode });
                     set({ mode });
+                    callback();
                     console.info(`Mode changed to ${mode}`);
                 } catch (e) {
                     console.error('Could not change the mode', e);
+                    callback();
                 }
             },
         }),
