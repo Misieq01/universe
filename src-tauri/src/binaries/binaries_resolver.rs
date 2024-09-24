@@ -3,8 +3,10 @@ use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 use regex::Regex;
 use semver::Version;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{self, PathBuf};
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::LazyLock;
 use tari_common::configuration::Network;
 use tokio::sync::RwLock;
@@ -16,6 +18,19 @@ use super::Binaries;
 
 static INSTANCE: LazyLock<RwLock<BinaryResolver>> =
     LazyLock::new(|| RwLock::new(BinaryResolver::new()));
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct BinaryVersionsJsonContent {
+    pub binaries: HashMap<String, String>,
+}
+
+impl FromStr for BinaryVersionsJsonContent {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct VersionDownloadInfo {
@@ -56,11 +71,16 @@ impl BinaryResolver {
     pub fn new() -> Self {
         let mut binary_manager = HashMap::<Binaries, BinaryManager>::new();
 
-        let versions_requirements_path = match Network::get_current_or_user_setting_or_default() {
-            Network::NextNet => path::absolute("./binaries_versions_nextnet.json").unwrap(),
-            Network::Esmeralda => path::absolute("./binaries_versions_esmeralda.json").unwrap(),
-            _ => panic!("Unsupported network"),
-        };
+        let versions_requirements_data: BinaryVersionsJsonContent =
+            match Network::get_current_or_user_setting_or_default() {
+                Network::NextNet => include_str!("../../binaries_versions_nextnet.json")
+                    .parse()
+                    .unwrap(),
+                Network::Esmeralda => include_str!("../../binaries_versions_esmeralda.json")
+                    .parse()
+                    .unwrap(),
+                _ => panic!("Unsupported network"),
+            };
 
         let (tari_prerelease_prefix, gpuminer_specific_nanme) =
             match Network::get_current_or_user_setting_or_default() {
@@ -74,7 +94,7 @@ impl BinaryResolver {
             BinaryManager::new(
                 Binaries::Xmrig.name().to_string(),
                 Box::new(XmrigVersionApiAdapter {}),
-                versions_requirements_path.clone(),
+                versions_requirements_data.clone(),
                 None,
                 true,
             ),
@@ -89,7 +109,7 @@ impl BinaryResolver {
                     owner: "stringhandler".to_string(),
                     specific_name: gpuminer_specific_nanme,
                 }),
-                versions_requirements_path.clone(),
+                versions_requirements_data.clone(),
                 None,
                 true,
             ),
@@ -104,7 +124,7 @@ impl BinaryResolver {
                     owner: "tari-project".to_string(),
                     specific_name: None,
                 }),
-                versions_requirements_path.clone(),
+                versions_requirements_data.clone(),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
             ),
@@ -119,7 +139,7 @@ impl BinaryResolver {
                     owner: "tari-project".to_string(),
                     specific_name: None,
                 }),
-                versions_requirements_path.clone(),
+                versions_requirements_data.clone(),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
             ),
@@ -134,7 +154,7 @@ impl BinaryResolver {
                     owner: "tari-project".to_string(),
                     specific_name: None,
                 }),
-                versions_requirements_path.clone(),
+                versions_requirements_data.clone(),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
             ),
@@ -149,7 +169,7 @@ impl BinaryResolver {
                     owner: "tari-project".to_string(),
                     specific_name: None,
                 }),
-                versions_requirements_path.clone(),
+                versions_requirements_data.clone(),
                 None,
                 true,
             ),

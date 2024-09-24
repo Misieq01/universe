@@ -10,46 +10,15 @@ use crate::{
 };
 
 use super::{
-    binaries_resolver::{LatestVersionApiAdapter, VersionAsset, VersionDownloadInfo},
+    binaries_resolver::{
+        BinaryVersionsJsonContent, LatestVersionApiAdapter, VersionAsset, VersionDownloadInfo,
+    },
     Binaries,
 };
 
 use log::{error, info, warn};
 
 pub const LOG_TARGET: &str = "tari::universe::binary_manager";
-
-#[derive(Deserialize, Serialize)]
-struct BinaryVersionsJsonContent {
-    binaries: HashMap<String, String>,
-}
-
-// Temporary fix until json problem is resolved
-impl BinaryVersionsJsonContent {
-    fn get_versions_requirements(network: Network) -> Self {
-        let mut binaries = HashMap::new();
-        match network {
-            Network::NextNet => {
-                binaries.insert("xmrig".to_string(), "6.22.0".to_string());
-                binaries.insert("mmproxy".to_string(), "1.5.1-rc.2".to_string());
-                binaries.insert("minotari_node".to_string(), "1.5.1-rc.2".to_string());
-                binaries.insert("wallet".to_string(), "1.5.1-rc.2".to_string());
-                binaries.insert("sha-p2pool".to_string(), "0.1.8".to_string());
-                binaries.insert("xtrgpuminer".to_string(), "0.1.8-pre.4".to_string());
-            }
-            Network::Esmeralda => {
-                binaries.insert("xmrig".to_string(), "6.22.0".to_string());
-                binaries.insert("mmproxy".to_string(), "1.5.1-pre.0".to_string());
-                binaries.insert("minotari_node".to_string(), "1.5.1-pre.0".to_string());
-                binaries.insert("wallet".to_string(), "1.5.1-pre.0".to_string());
-                binaries.insert("sha-p2pool".to_string(), "0.1.8".to_string());
-                binaries.insert("xtrgpuminer".to_string(), "0.1.8-pre.4".to_string());
-            }
-            _ => panic!("Unsupported network"),
-        }
-
-        Self { binaries }
-    }
-}
 
 pub struct BinaryManager {
     binary_name: String,
@@ -70,13 +39,13 @@ impl BinaryManager {
     pub fn new(
         binary_name: String,
         adapter: Box<dyn LatestVersionApiAdapter>,
-        versions_requirements_path: PathBuf,
+        versions_requirements_data: BinaryVersionsJsonContent,
         network_prerelease_prefix: Option<String>,
         should_validate_checksum: bool,
     ) -> Self {
         let version_requirements = BinaryManager::read_version_requirements(
             binary_name.clone(),
-            versions_requirements_path,
+            versions_requirements_data,
         );
 
         Self {
@@ -91,21 +60,13 @@ impl BinaryManager {
         }
     }
 
-    fn read_version_requirements(binary_name: String, path: PathBuf) -> VersionReq {
-        info!(target: LOG_TARGET, "Reading version requirements for {:?} from: {:?}",binary_name, path);
+    fn read_version_requirements(
+        binary_name: String,
+        data: BinaryVersionsJsonContent,
+    ) -> VersionReq {
+        info!(target: LOG_TARGET, "Reading version requirements for {:?}",binary_name);
 
-        // Bring back when json problem is resolved
-
-        // let json_content: BinaryVersionsJsonContent =
-        //     serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
-        // let version_req = json_content.binaries.get(&binary_name);
-
-        let json_content: BinaryVersionsJsonContent =
-            BinaryVersionsJsonContent::get_versions_requirements(
-                Network::get_current_or_user_setting_or_default(),
-            );
-
-        let version_req = json_content.binaries.get(&binary_name);
+        let version_req = data.binaries.get(&binary_name);
 
         match version_req {
             Some(version_req) => {
