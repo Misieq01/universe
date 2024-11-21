@@ -60,11 +60,14 @@ tari_common_types = { git = "https://github.com/tari-project/tari.git", branch =
 tari_core = { git = "https://github.com/tari-project/tari.git", branch = "development", features = [
   "transactions",
 ] }
+
 hickory-client = { version = "=0.25.0-alpha.2", features = [
   "dns-over-rustls",
   "dnssec-openssl",
 ] }
 hickory-proto = { version = "=0.25.0-alpha.2" }
+openssl = { version = "0.10", features = ["vendored"] }
+
 tari_crypto = "0.21.0"
 tari_key_manager = { git = "https://github.com/tari-project/tari.git", branch = "development" }
 tari_shutdown = { git = "https://github.com/tari-project/tari.git", branch = "development" }

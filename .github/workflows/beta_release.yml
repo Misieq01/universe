@@ -156,11 +156,6 @@ jobs:
                   vcpkg.exe install sqlite3:x64-windows zlib:x64-windows
                   choco upgrade protoc -y
 
-            - name: Install OpenSSL (Windows)
-              if: startsWith(runner.os,'Windows')
-              run: |
-                  vcpkg install openssl:x64-windows-static-md
-
             - name: Install dependencies (windows/OpenCL)
               if: startsWith(runner.os,'Windows')
               run: |
