@@ -31,7 +31,7 @@ jobs:
                     - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
                       args: ''
                     - platform: 'windows-2019'
-                      args: ''
+                      args: '--bundles updater'
                     - platform: 'macos-latest'
                       args: '--target universal-apple-darwin'
 
@@ -209,7 +209,7 @@ jobs:
                   releaseBody: 'Tari Universe (BETA) - See the assets to download this version and install'
                   releaseDraft: true
                   prerelease: true
-                  args: ${{ matrix.args }} --features "${{ env.TS_FEATURES }}" --bundles updater
+                  args: ${{ matrix.args }} --features "${{ env.TS_FEATURES }}"
 
             - name: Debug step {artifactPaths}
               if: ${{ false }}
