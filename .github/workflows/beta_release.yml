@@ -32,7 +32,7 @@ jobs:
                     - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
                       args: ''
                     - platform: 'windows-2019'
-                      args: '--bundles updater,msi'
+                      args: '--bundles updater, msi'
                     - platform: 'macos-latest'
                       args: '--target universal-apple-darwin'
 
