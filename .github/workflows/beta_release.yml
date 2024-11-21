@@ -176,7 +176,7 @@ jobs:
               run: |
                   cd "${GITHUB_WORKSPACE}/src-tauri"
                   echo "{}" | \
-                    jq '.tauri .bundle .windows += {"signCommand": "${{ env.WINDOWS_SIGN_COMMAND }}"}' > \
+                    jq '.bundle .windows += {"signCommand": "${{ env.WINDOWS_SIGN_COMMAND }}"}' > \
                       ./tauri.windows.conf.json
                   cat ./tauri.windows.conf.json
                   cargo install trusted-signing-cli@0.3.0 --locked
@@ -209,15 +209,15 @@ jobs:
                   releaseBody: 'Tari Universe (BETA) - See the assets to download this version and install'
                   releaseDraft: true
                   prerelease: true
-                  args: ${{ matrix.args }} --bundles "updater" --features "${{ env.TS_FEATURES }}"
+                  args: ${{ matrix.args }} --features "${{ env.TS_FEATURES }}" --bundles updater
 
             - name: Debug step {artifactPaths}
+              if: ${{ false }}
               continue-on-error: true
               env:
                   artifactPaths: ${{ steps.build.outputs.artifactPaths }}
-                  path2: ${{ steps.build.outputs.artifactPaths[1] }}
               shell: bash
-              run: echo "Artifact ID from previous job is $artifactPaths | Artifact 1 is $artifactPaths[0] | 2 is $path2"
+              run: echo "Artifact ID from previous job is $artifactPaths"
 
             - name: Upload BETA releases
               if: ${{ ( github.event_name == 'schedule' ) || ( ! startsWith(github.ref, 'refs/heads/release') ) }}
