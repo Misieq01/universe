@@ -8,6 +8,7 @@ on:
         branches:
             - 'beta'
             - 'build-*'
+            - 'chore/v2-fix-chore-builds'
 
 concurrency:
     # https://docs.github.com/en/actions/examples/using-concurrency-expressions-and-a-test-matrix
@@ -154,6 +155,11 @@ jobs:
               run: |
                   vcpkg.exe install sqlite3:x64-windows zlib:x64-windows
                   choco upgrade protoc -y
+
+            - name: Install OpenSSL (Windows)
+              if: startsWith(runner.os,'Windows')
+              run: |
+                  vcpkg install openssl:x64-windows-static-md
 
             - name: Install dependencies (windows/OpenCL)
               if: startsWith(runner.os,'Windows')
