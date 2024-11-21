@@ -31,7 +31,7 @@ jobs:
                     - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
                       args: ''
                     - platform: 'windows-2019'
-                      args: '--bundles msi,updater'
+                      args: ''
                     - platform: 'macos-latest'
                       args: '--target universal-apple-darwin'
 
@@ -176,7 +176,7 @@ jobs:
               run: |
                   cd "${GITHUB_WORKSPACE}/src-tauri"
                   echo "{}" | \
-                    jq '.bundle .windows += {"signCommand": "${{ env.WINDOWS_SIGN_COMMAND }}"}' > \
+                    jq '.tauri .bundle .windows += {"signCommand": "${{ env.WINDOWS_SIGN_COMMAND }}"}' > \
                       ./tauri.windows.conf.json
                   cat ./tauri.windows.conf.json
                   cargo install trusted-signing-cli@0.3.0 --locked
@@ -209,7 +209,7 @@ jobs:
                   releaseBody: 'Tari Universe (BETA) - See the assets to download this version and install'
                   releaseDraft: true
                   prerelease: true
-                  args: ${{ matrix.args }} --features "${{ env.TS_FEATURES }}"
+                  args: ${{ matrix.args }} --features "${{ env.TS_FEATURES }} --bundles updater"
 
             - name: Debug step {artifactPaths}
               continue-on-error: true
