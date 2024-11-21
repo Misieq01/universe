@@ -1,7 +1,8 @@
-import { useShuttingDown } from '@app/hooks/useShuttingDown';
-import { useAppStateStore } from '@app/store/appStateStore';
 import { LazyMotion, domMax, MotionConfig } from 'framer-motion';
 
+import { useAppStateStore } from '@app/store/appStateStore';
+import { useShuttingDown } from '@app/hooks';
+import { useEffect, useRef } from 'react';
 import ShuttingDownScreen from '../containers/phase/ShuttingDownScreen/ShuttingDownScreen.tsx';
 import FloatingElements from '../containers/floating/FloatingElements.tsx';
 import MainView from '../containers/main/MainView.tsx';
@@ -15,6 +16,16 @@ import AppContent from './AppContent';
 export default function App() {
     const isShuttingDown = useShuttingDown();
     const isSettingUp = useAppStateStore((s) => s.isSettingUp);
+    const hasCompletedSetup = useRef(false);
+
+    useEffect(() => {
+        if (!isSettingUp) {
+            hasCompletedSetup.current = true;
+        }
+    }, [isSettingUp]);
+
+    const showSetup = isSettingUp && !hasCompletedSetup.current && !isShuttingDown;
+
     return (
         <ThemeProvider>
             <GlobalReset />
@@ -28,8 +39,8 @@ export default function App() {
                 <MotionConfig reducedMotion="user">
                     <FloatingElements />
                     <AppContent key="app-content">
-                        {isSettingUp ? <Setup /> : null}
-                        {isShuttingDown || isSettingUp ? null : <MainView />}
+                        {showSetup ? <Setup /> : null}
+                        {isShuttingDown || showSetup ? null : <MainView />}
                         {isShuttingDown ? <ShuttingDownScreen /> : null}
                     </AppContent>
                 </MotionConfig>

@@ -1,14 +1,14 @@
 import * as Sentry from '@sentry/react';
 import { useCallback, useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/tauri';
+import { TauriEvent } from '../../types.ts';
 
-import { TauriEvent } from '../types.ts';
+import { invoke } from '@tauri-apps/api/core';
 
-import { useAppStateStore } from '../store/appStateStore.ts';
+import { useAppStateStore } from '../../store/appStateStore.ts';
 
 import { useAirdropStore } from '@app/store/useAirdropStore.ts';
-import { useHandleAirdropTokensRefresh } from '@app/hooks/airdrop/stateHelpers/useAirdropTokensRefresh.ts';
+import { useHandleAirdropTokensRefresh } from '../airdrop/stateHelpers/useAirdropTokensRefresh.ts';
 
 export function useSetUp() {
     const isInitializingRef = useRef(false);
@@ -34,7 +34,6 @@ export function useSetUp() {
         refreshTokens();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
     const clearStorage = useCallback(() => {
         // clear all storage except airdrop data
         const airdropStorage = localStorage.getItem('airdrop-store');
@@ -76,12 +75,12 @@ export function useSetUp() {
             unlistenPromise.then((unlisten) => unlisten());
         };
     }, [
-        syncedAidropWithBackend,
         clearStorage,
         handlePostSetup,
         isAfterAutoUpdate,
         setCriticalError,
         setSeenPermissions,
         setSetupDetails,
+        syncedAidropWithBackend,
     ]);
 }
