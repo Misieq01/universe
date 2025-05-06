@@ -44,7 +44,7 @@ struct Asset {
 }
 
 #[derive(Debug)]
-enum ReleaseSource {
+pub enum ReleaseSource {
     Github,
     Mirror,
 }
@@ -118,7 +118,7 @@ pub async fn list_releases(
     // }
 }
 
-async fn list_releases_from(
+pub async fn list_releases_from(
     source: ReleaseSource,
     repo_owner: &str,
     repo_name: &str,

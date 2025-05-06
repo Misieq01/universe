@@ -144,17 +144,50 @@ impl BinaryResolver {
         );
 
         binary_manager.insert(
-            Binaries::GpuMiner,
+            Binaries::GpuMinerOpenCL,
             Mutex::new(BinaryManager::new(
                 Binaries::GpuMinerOpenCL.name().to_string(),
                 None,
                 Box::new(GithubReleasesAdapter {
                     repo: "glytex".to_string(),
                     owner: "tari-project".to_string(),
-                    specific_name: gpuminer_specific_name,
+                    specific_name: gpu_miner_opencl_regex,
+                    binary_name: Some(Binaries::GpuMinerOpenCL.name().to_string()),
                 }),
                 None,
-                true,
+                false,
+            )),
+        );
+
+        binary_manager.insert(
+            Binaries::GpuMinerCuda,
+            Mutex::new(BinaryManager::new(
+                Binaries::GpuMinerCuda.name().to_string(),
+                None,
+                Box::new(GithubReleasesAdapter {
+                    repo: "glytex".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: gpu_miner_cuda_regex,
+                    binary_name: Some(Binaries::GpuMinerCuda.name().to_string()),
+                }),
+                None,
+                false,
+            )),
+        );
+
+        binary_manager.insert(
+            Binaries::GpuMinerMetal,
+            Mutex::new(BinaryManager::new(
+                Binaries::GpuMinerMetal.name().to_string(),
+                None,
+                Box::new(GithubReleasesAdapter {
+                    repo: "glytex".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: gpu_miner_metal_regex,
+                    binary_name: Some(Binaries::GpuMinerMetal.name().to_string()),
+                }),
+                None,
+                false,
             )),
         );
 
@@ -167,6 +200,7 @@ impl BinaryResolver {
                     repo: "tari".to_string(),
                     owner: "tari-project".to_string(),
                     specific_name: None,
+                    binary_name: None,
                 }),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
@@ -182,6 +216,7 @@ impl BinaryResolver {
                     repo: "tari".to_string(),
                     owner: "tari-project".to_string(),
                     specific_name: None,
+                    binary_name: None,
                 }),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
@@ -197,6 +232,7 @@ impl BinaryResolver {
                     repo: "tari".to_string(),
                     owner: "tari-project".to_string(),
                     specific_name: None,
+                    binary_name: None,
                 }),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
@@ -212,6 +248,7 @@ impl BinaryResolver {
                     repo: "sha-p2pool".to_string(),
                     owner: "tari-project".to_string(),
                     specific_name: None,
+                    binary_name: None,
                 }),
                 None,
                 true,

@@ -29,7 +29,9 @@ use regex::Regex;
 use tari_common::configuration::Network;
 
 use crate::{
-    download_utils::download_file_with_retries, github, progress_tracker_old::ProgressTracker,
+    download_utils::download_file_with_retries,
+    github::{self, ReleaseSource},
+    progress_tracker_old::ProgressTracker,
     APPLICATION_FOLDER_ID,
 };
 
@@ -48,7 +50,8 @@ pub struct GithubReleasesAdapter {
 #[async_trait]
 impl LatestVersionApiAdapter for GithubReleasesAdapter {
     async fn fetch_releases_list(&self) -> Result<Vec<VersionDownloadInfo>, Error> {
-        let releases = github::list_releases(&self.owner, &self.repo).await?;
+        let releases =
+            github::list_releases_from(ReleaseSource::Github, &self.owner, &self.repo).await?;
         Ok(releases.clone())
     }
 
@@ -119,7 +122,7 @@ impl LatestVersionApiAdapter for GithubReleasesAdapter {
             name_suffix = r"macos-arm64.*\.zip";
         }
         if cfg!(target_os = "linux") {
-            name_suffix = r"linux-x86_64.*\.zip";
+            name_suffix = r"linux-x86_64.*\.zip$";
         }
         if name_suffix.is_empty() {
             panic!("Unsupported OS");

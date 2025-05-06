@@ -182,17 +182,20 @@ impl SetupPhaseImpl for HardwareSetupPhase {
             ))
             .await;
 
+        info!(target: LOG_TARGET, "Resolving OpenCL binary");
         binary_resolver
-            .initialize_binary_timeout(Binaries::GpuMinerCuda, progress.clone(), rx.clone())
+            .initialize_binary_timeout(Binaries::GpuMinerOpenCL, progress.clone(), rx.clone())
             .await?;
 
         if cfg!(not(target_os = "macos")) {
+            info!(target: LOG_TARGET, "Resolving Cuda binary");
             binary_resolver
                 .initialize_binary_timeout(Binaries::GpuMinerCuda, progress.clone(), rx.clone())
                 .await?;
         };
 
         if cfg!(target_os = "macos") {
+            info!(target: LOG_TARGET, "Resolving Metal binary");
             binary_resolver
                 .initialize_binary_timeout(Binaries::GpuMinerMetal, progress.clone(), rx.clone())
                 .await?;
@@ -227,7 +230,7 @@ impl SetupPhaseImpl for HardwareSetupPhase {
         for binary in miners_to_detect {
             let (gpu_binary, gpu_engine) = binary;
 
-            state
+            let _unused = state
                 .gpu_miner
                 .write()
                 .await
