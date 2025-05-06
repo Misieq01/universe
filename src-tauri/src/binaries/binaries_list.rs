@@ -31,7 +31,9 @@ pub enum Binaries {
     MinotariNode,
     Wallet,
     ShaP2pool,
-    GpuMiner,
+    GpuMinerCuda,
+    GpuMinerOpenCL,
+    GpuMinerMetal,
     Tor,
 }
 
@@ -43,7 +45,9 @@ impl Binaries {
             Binaries::MinotariNode => "minotari_node",
             Binaries::Wallet => "wallet",
             Binaries::ShaP2pool => "sha-p2pool",
-            Binaries::GpuMiner => "glytex",
+            Binaries::GpuMinerCuda => "glytex-cuda",
+            Binaries::GpuMinerMetal => "glytex-metal",
+            Binaries::GpuMinerOpenCL => "glytex-opencl",
             Binaries::Tor => "tor",
         }
     }
@@ -55,7 +59,9 @@ impl Binaries {
             "minotari_node" => Binaries::MinotariNode,
             "wallet" => Binaries::Wallet,
             "sha-p2pool" => Binaries::ShaP2pool,
-            "glytex" => Binaries::GpuMiner,
+            "glytex-cuda" => Binaries::GpuMinerCuda,
+            "glytex-metal" => Binaries::GpuMinerMetal,
+            "glytex-opencl" => Binaries::GpuMinerOpenCL,
             "tor" => Binaries::Tor,
             _ => panic!("Unknown binary name: {}", name),
         }
@@ -83,8 +89,16 @@ impl Binaries {
                 let file_name = "sha_p2pool";
                 PathBuf::from(file_name)
             }
-            Binaries::GpuMiner => {
-                let file_name = "glytex";
+            Binaries::GpuMinerCuda => {
+                let file_name = "glytex-cuda";
+                PathBuf::from(file_name)
+            }
+            Binaries::GpuMinerOpenCL => {
+                let file_name = "glytex-opencl";
+                PathBuf::from(file_name)
+            }
+            Binaries::GpuMinerMetal => {
+                let file_name = "glytex-metal";
                 PathBuf::from(file_name)
             }
             Binaries::Tor => {
@@ -102,7 +116,9 @@ impl Binaries {
             Binaries::MinotariNode,
             Binaries::Wallet,
             Binaries::ShaP2pool,
-            Binaries::GpuMiner,
+            Binaries::GpuMinerCuda,
+            Binaries::GpuMinerOpenCL,
+            Binaries::GpuMinerMetal,
             Binaries::Tor,
         ]
         .iter()

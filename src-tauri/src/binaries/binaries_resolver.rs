@@ -25,7 +25,7 @@ use crate::configs::trait_config::ConfigImpl;
 use crate::ProgressTracker;
 use anyhow::{anyhow, Error};
 use async_trait::async_trait;
-use log::error;
+use log::{error, info};
 use regex::Regex;
 use semver::Version;
 use std::collections::HashMap;
@@ -90,33 +90,55 @@ impl BinaryResolver {
     pub fn new() -> Self {
         let mut binary_manager = HashMap::<Binaries, Mutex<BinaryManager>>::new();
 
-        let mut gpu_miner_nextnet_regex = Regex::new(r"opencl.*nextnet").ok();
-        let mut gpu_miner_testnet_regex = Regex::new(r"opencl.*testnet").ok();
-        let mut gpu_miner_mainnet_regex = Regex::new(r"opencl.*mainnet").ok();
+        let gpu_miner_opencl_regex = match Network::get_current_or_user_setting_or_default() {
+            Network::MainNet => Regex::new(r"opencl.*mainnet").ok(),
+            Network::StageNet => Regex::new(r"opencl.*mainnet").ok(),
+            Network::NextNet => Regex::new(r"opencl.*nextnet").ok(),
+            Network::Esmeralda => Regex::new(r"opencl.*testnet").ok(),
+            Network::Igor => Regex::new(r"opencl.*testnet").ok(),
+            Network::LocalNet => Regex::new(r"opencl.*testnet").ok(),
+        };
 
-        if cfg!(target_os = "macos") && cfg!(target_arch = "aarch64") {
-            gpu_miner_nextnet_regex = Regex::new(r"combined.*nextnet").ok();
-            gpu_miner_testnet_regex = Regex::new(r"combined.*testnet").ok();
-            gpu_miner_mainnet_regex = Regex::new(r"combined.*mainnet").ok();
-        }
+        let gpu_miner_cuda_regex = match Network::get_current_or_user_setting_or_default() {
+            Network::MainNet => Regex::new(r"cuda.*mainnet").ok(),
+            Network::StageNet => Regex::new(r"cuda.*mainnet").ok(),
+            Network::NextNet => Regex::new(r"cuda.*nextnet").ok(),
+            Network::Esmeralda => Regex::new(r"cuda.*testnet").ok(),
+            Network::Igor => Regex::new(r"cuda.*testnet").ok(),
+            Network::LocalNet => Regex::new(r"cuda.*testnet").ok(),
+        };
 
-        let (tari_prerelease_prefix, gpuminer_specific_name) =
-            match Network::get_current_or_user_setting_or_default() {
-                Network::MainNet => ("", gpu_miner_mainnet_regex),
-                Network::StageNet => ("", gpu_miner_nextnet_regex),
-                Network::NextNet => ("rc", gpu_miner_nextnet_regex),
-                Network::Esmeralda => ("pre", gpu_miner_testnet_regex),
-                Network::Igor => ("pre", gpu_miner_testnet_regex),
-                Network::LocalNet => ("pre", gpu_miner_testnet_regex),
-            };
+        let gpu_miner_metal_regex = match Network::get_current_or_user_setting_or_default() {
+            Network::MainNet => Regex::new(r"metal.*mainnet").ok(),
+            Network::StageNet => Regex::new(r"metal.*mainnet").ok(),
+            Network::NextNet => Regex::new(r"metal.*nextnet").ok(),
+            Network::Esmeralda => Regex::new(r"metal.*testnet").ok(),
+            Network::Igor => Regex::new(r"metal.*testnet").ok(),
+            Network::LocalNet => Regex::new(r"metal.*testnet").ok(),
+        };
+
+        let tari_prerelease_prefix = match Network::get_current_or_user_setting_or_default() {
+            Network::MainNet => "",
+            Network::StageNet => "",
+            Network::NextNet => "rc",
+            Network::Esmeralda => "pre",
+            Network::Igor => "pre",
+            Network::LocalNet => "pre",
+        };
+
+        info!(
+            target: "tari::universe::main",
+            "Using {} as the prefix for pre-releases",
+            tari_prerelease_prefix
+        );
 
         let xmrig_default_adapter = XmrigVersionApiAdapter {};
 
-        let gpu_default_adapter = GithubReleasesAdapter {
-            repo: "glytex".to_string(),
-            owner: "tari-project".to_string(),
-            specific_name: gpuminer_specific_name,
-        };
+        // let gpu_default_adapter = GithubReleasesAdapter {
+        //     repo: "glytex".to_string(),
+        //     owner: "tari-project".to_string(),
+        //     specific_name: None,
+        // };
 
         // let merge_mining_default_adapter = GithubReleasesAdapter {
         //     repo: "tari".to_string(),
@@ -176,6 +198,7 @@ impl BinaryResolver {
             repo: "sha-p2pool".to_string(),
             owner: "tari-project".to_string(),
             specific_name: None,
+            binary_name: None,
         };
 
         let tor_default_adapter = TorReleaseAdapter {};
@@ -193,11 +216,48 @@ impl BinaryResolver {
         );
 
         binary_manager.insert(
-            Binaries::GpuMiner,
+            Binaries::GpuMinerCuda,
             Mutex::new(BinaryManager::new(
-                Binaries::GpuMiner.name().to_string(),
+                Binaries::GpuMinerCuda.name().to_string(),
                 None,
-                Box::new(gpu_default_adapter),
+                Box::new(GithubReleasesAdapter {
+                    repo: "glytex".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: gpu_miner_cuda_regex,
+                    binary_name: Some(Binaries::GpuMinerCuda.name().to_string()),
+                }),
+                None,
+                true,
+            )),
+        );
+
+        binary_manager.insert(
+            Binaries::GpuMinerMetal,
+            Mutex::new(BinaryManager::new(
+                Binaries::GpuMinerMetal.name().to_string(),
+                None,
+                Box::new(GithubReleasesAdapter {
+                    repo: "glytex".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: gpu_miner_metal_regex,
+                    binary_name: Some(Binaries::GpuMinerMetal.name().to_string()),
+                }),
+                None,
+                true,
+            )),
+        );
+
+        binary_manager.insert(
+            Binaries::GpuMinerOpenCL,
+            Mutex::new(BinaryManager::new(
+                Binaries::GpuMinerOpenCL.name().to_string(),
+                None,
+                Box::new(GithubReleasesAdapter {
+                    repo: "glytex".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: gpu_miner_opencl_regex,
+                    binary_name: Some(Binaries::GpuMinerOpenCL.name().to_string()),
+                }),
                 None,
                 true,
             )),

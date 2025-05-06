@@ -142,6 +142,8 @@ fn sanitize_file_path(path: &str) -> PathBuf {
         .collect()
 }
 pub async fn extract_zip(archive: &Path, out_dir: &Path) -> Result<(), anyhow::Error> {
+    info!(target: LOG_TARGET, "Extracting file at {:?}", archive);
+    info!(target: LOG_TARGET, "Unpacking to {:?}", out_dir);
     let archive = BufReader::new(fs::File::open(archive).await?).compat();
     let mut reader = ZipFileReader::new(archive).await?;
     for index in 0..reader.file().entries().len() {
@@ -177,6 +179,13 @@ pub async fn extract_zip(archive: &Path, out_dir: &Path) -> Result<(), anyhow::E
         })?;
 
         let mut entry_reader = reader.reader_without_entry(index).await?;
+
+        info!(
+            target: LOG_TARGET,
+            "Extracting entry {} to {:?}",
+            index,
+            path
+        );
 
         if entry_is_dir {
             // The directory may have been created if iteration is out of order.

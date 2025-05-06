@@ -124,6 +124,7 @@ impl GpuMiner {
         mining_mode: MiningMode,
         coinbase_extra: String,
         custom_gpu_grid_size: Vec<GpuThreads>,
+        engine: EngineType,
     ) -> Result<(), anyhow::Error> {
         let shutdown_signal = TasksTrackers::current().hardware_phase.get_signal().await;
         let task_tracker = TasksTrackers::current()
@@ -139,13 +140,21 @@ impl GpuMiner {
             .set_mode(mining_mode, custom_gpu_grid_size);
         process_watcher.adapter.node_source = Some(node_source);
         process_watcher.adapter.coinbase_extra = coinbase_extra;
+        process_watcher.adapter.curent_selected_engine = engine.clone();
+
+        let binary = match engine {
+            EngineType::Cuda => Binaries::GpuMinerCuda,
+            EngineType::OpenCL => Binaries::GpuMinerOpenCL,
+            EngineType::Metal => Binaries::GpuMinerMetal,
+        };
+
         info!(target: LOG_TARGET, "Starting xtrgpuminer");
         process_watcher
             .start(
                 base_path,
                 config_path,
                 log_path,
-                Binaries::GpuMiner,
+                binary,
                 shutdown_signal.clone(),
                 task_tracker,
             )
@@ -184,9 +193,9 @@ impl GpuMiner {
         app: AppHandle,
         config_dir: PathBuf,
         engine: EngineType,
+        binary: Binaries,
     ) -> Result<(), anyhow::Error> {
         info!(target: LOG_TARGET, "Verify if gpu miner can work on the system");
-        self.curent_selected_engine = engine;
 
         let config_file = config_dir
             .join("gpuminer")
@@ -205,12 +214,12 @@ impl GpuMiner {
             "--gpu-status-file".to_string(),
             gpu_engine_statuses.clone(),
             "--engine".to_string(),
-            self.curent_selected_engine.to_string(),
+            engine.clone().to_string(),
         ];
         let gpuminer_bin = BinaryResolver::current()
             .read()
             .await
-            .resolve_path_to_binary_files(Binaries::GpuMiner)
+            .resolve_path_to_binary_files(binary)
             .await?;
 
         info!(target: LOG_TARGET, "Gpu miner binary file path {:?}", gpuminer_bin.clone());
@@ -219,7 +228,7 @@ impl GpuMiner {
         let output = child.wait_with_output().await?;
         info!(target: LOG_TARGET, "Gpu detect exit code: {:?}", output.status.code().unwrap_or_default());
 
-        let gpu_status_file_name = format!("{}_gpu_status.json", self.curent_selected_engine);
+        let gpu_status_file_name = format!("{}_gpu_status.json", engine);
         let gpu_status_file_path =
             get_gpu_engines_statuses_path(&config_dir).join(gpu_status_file_name);
         let gpu_status_file = GpuStatusFile::load(&gpu_status_file_path)?;
@@ -235,7 +244,7 @@ impl GpuMiner {
                         .iter()
                         .map(|x| x.to_string())
                         .collect(),
-                    self.curent_selected_engine.to_string(),
+                    engine.clone().to_string(),
                 )
                 .await;
 

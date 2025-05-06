@@ -183,8 +183,20 @@ impl SetupPhaseImpl for HardwareSetupPhase {
             .await;
 
         binary_resolver
-            .initialize_binary_timeout(Binaries::GpuMiner, progress.clone(), rx.clone())
+            .initialize_binary_timeout(Binaries::GpuMinerCuda, progress.clone(), rx.clone())
             .await?;
+
+        if cfg!(not(target_os = "macos")) {
+            binary_resolver
+                .initialize_binary_timeout(Binaries::GpuMinerCuda, progress.clone(), rx.clone())
+                .await?;
+        };
+
+        if cfg!(target_os = "macos") {
+            binary_resolver
+                .initialize_binary_timeout(Binaries::GpuMinerMetal, progress.clone(), rx.clone())
+                .await?;
+        };
 
         progress_stepper
             .resolve_step(ProgressPlans::Hardware(
@@ -202,17 +214,32 @@ impl SetupPhaseImpl for HardwareSetupPhase {
             ))
             .await;
 
-        let _unused = state
-            .gpu_miner
-            .write()
-            .await
-            .detect(
-                self.app_handle.clone(),
-                config_dir.clone(),
-                self.app_configuration.gpu_engine.clone(),
-            )
-            .await
-            .inspect_err(|e| error!(target: LOG_TARGET, "Could not detect gpu miner: {:?}", e));
+        let mut miners_to_detect = vec![(Binaries::GpuMinerOpenCL, EngineType::OpenCL)];
+
+        if cfg!(target_os = "macos") {
+            miners_to_detect.push((Binaries::GpuMinerMetal, EngineType::Metal));
+        }
+
+        if cfg!(not(target_os = "macos")) {
+            miners_to_detect.push((Binaries::GpuMinerCuda, EngineType::Cuda));
+        }
+
+        for binary in miners_to_detect {
+            let (gpu_binary, gpu_engine) = binary;
+
+            state
+                .gpu_miner
+                .write()
+                .await
+                .detect(
+                    self.app_handle.clone(),
+                    config_dir.clone(),
+                    gpu_engine,
+                    gpu_binary,
+                )
+                .await
+                .inspect_err(|e| error!(target: LOG_TARGET, "Could not detect gpu miner: {:?}", e));
+        }
 
         HardwareStatusMonitor::current().initialize().await?;
 

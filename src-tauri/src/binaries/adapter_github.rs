@@ -37,10 +37,12 @@ use super::binaries_resolver::{LatestVersionApiAdapter, VersionAsset, VersionDow
 
 pub const LOG_TARGET: &str = "tari::universe::adapter_github";
 
+#[derive(Debug, Clone)]
 pub struct GithubReleasesAdapter {
     pub repo: String,
     pub owner: String,
     pub specific_name: Option<Regex>,
+    pub binary_name: Option<String>,
 }
 
 #[async_trait]
@@ -75,10 +77,15 @@ impl LatestVersionApiAdapter for GithubReleasesAdapter {
         let cache_path =
             dirs::cache_dir().ok_or_else(|| anyhow::anyhow!("Failed to get cache directory"))?;
 
+        let binary_directory = match self.binary_name {
+            Some(ref name) => name,
+            None => self.repo.as_str(),
+        };
+
         let binary_folder_path = cache_path
             .join(APPLICATION_FOLDER_ID)
             .join("binaries")
-            .join(&self.repo)
+            .join(binary_directory)
             .join(
                 Network::get_current_or_user_setting_or_default()
                     .to_string()

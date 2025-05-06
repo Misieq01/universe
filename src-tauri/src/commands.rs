@@ -317,7 +317,7 @@ pub async fn get_applications_versions(
         .get_binary_version_string(Binaries::ShaP2pool)
         .await;
     let xtrgpuminer_version = binary_resolver
-        .get_binary_version_string(Binaries::GpuMiner)
+        .get_binary_version_string(Binaries::GpuMinerOpenCL)
         .await;
 
     if timer.elapsed() > MAX_ACCEPTABLE_COMMAND_TIME {
@@ -1480,6 +1480,7 @@ pub async fn start_mining<'r>(
         let tari_address = cpu_miner_config.tari_address.clone();
         drop(cpu_miner_config);
 
+        let engine = ConfigMining::content().await.gpu_engine().clone();
         let mut gpu_miner = state.gpu_miner.write().await;
         let res = gpu_miner
             .start(
@@ -1495,6 +1496,7 @@ pub async fn start_mining<'r>(
                 mode,
                 telemetry_id,
                 custom_gpu_usage,
+                engine,
             )
             .await;
 
