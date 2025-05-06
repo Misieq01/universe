@@ -38,7 +38,6 @@ use tokio::sync::watch::Receiver;
 use tokio::sync::{Mutex, RwLock};
 use tokio::time::timeout;
 
-use super::adapter_cdn::CDNReleaseAdapter;
 use super::adapter_github::GithubReleasesAdapter;
 use super::adapter_tor::TorReleaseAdapter;
 use super::adapter_xmrig::XmrigVersionApiAdapter;
@@ -132,131 +131,27 @@ impl BinaryResolver {
             tari_prerelease_prefix
         );
 
-        let xmrig_default_adapter = XmrigVersionApiAdapter {};
-
-        // let gpu_default_adapter = GithubReleasesAdapter {
-        //     repo: "glytex".to_string(),
-        //     owner: "tari-project".to_string(),
-        //     specific_name: None,
-        // };
-
-        // let merge_mining_default_adapter = GithubReleasesAdapter {
-        //     repo: "tari".to_string(),
-        //     owner: "tari-project".to_string(),
-        //     specific_name: None,
-        // };
-        let merge_mining_cdn_version =
-            CDNReleaseAdapter::read_version(Binaries::MergeMiningProxy.name().to_string());
-        let merge_mining_cdn_adapter = CDNReleaseAdapter {
-            binary_name: Binaries::MergeMiningProxy,
-            specific_name: None,
-            cdn_versions_list_path: format!(
-                "https://cdn-universe.tari.com/tari-project/tari/releases/download/v{}/tari_suite-{}.sha256-unsigned.txt",
-                merge_mining_cdn_version,
-                merge_mining_cdn_version
-            ),
-        };
-
-        // let minotari_node_default_adapter = GithubReleasesAdapter {
-        //     repo: "tari".to_string(),
-        //     owner: "tari-project".to_string(),
-        //     specific_name: None,
-        // };
-
-        let minotari_node_cdn_version =
-            CDNReleaseAdapter::read_version(Binaries::MinotariNode.name().to_string());
-
-        let minotari_node_cdn_adapter = CDNReleaseAdapter {
-            binary_name: Binaries::MinotariNode,
-            specific_name: None,
-            cdn_versions_list_path: format!(
-                "https://cdn-universe.tari.com/tari-project/tari/releases/download/v{}/tari_suite-{}.sha256-unsigned.txt",
-                minotari_node_cdn_version,
-                minotari_node_cdn_version
-            ),
-        };
-        // let wallet_default_adapter = GithubReleasesAdapter {
-        //     repo: "tari".to_string(),
-        //     owner: "tari-project".to_string(),
-        //     specific_name: None,
-        // };
-
-        let wallet_cdn_version =
-            CDNReleaseAdapter::read_version(Binaries::Wallet.name().to_string());
-
-        let wallet_cdn_adapter = CDNReleaseAdapter {
-            binary_name: Binaries::Wallet,
-            specific_name: None,
-            cdn_versions_list_path: format!(
-                "https://cdn-universe.tari.com/tari-project/tari/releases/download/v{}/tari_suite-{}.sha256-unsigned.txt",
-                wallet_cdn_version,
-                wallet_cdn_version
-            ),
-        };
-
-        let sha_pool_default = GithubReleasesAdapter {
-            repo: "sha-p2pool".to_string(),
-            owner: "tari-project".to_string(),
-            specific_name: None,
-            binary_name: None,
-        };
-
-        let tor_default_adapter = TorReleaseAdapter {};
-
         binary_manager.insert(
             Binaries::Xmrig,
             Mutex::new(BinaryManager::new(
                 Binaries::Xmrig.name().to_string(),
                 // Some("xmrig-6.22.0".to_string()),
                 None,
-                Box::new(xmrig_default_adapter),
+                Box::new(XmrigVersionApiAdapter {}),
                 None,
                 true,
             )),
         );
 
         binary_manager.insert(
-            Binaries::GpuMinerCuda,
-            Mutex::new(BinaryManager::new(
-                Binaries::GpuMinerCuda.name().to_string(),
-                None,
-                Box::new(GithubReleasesAdapter {
-                    repo: "glytex".to_string(),
-                    owner: "tari-project".to_string(),
-                    specific_name: gpu_miner_cuda_regex,
-                    binary_name: Some(Binaries::GpuMinerCuda.name().to_string()),
-                }),
-                None,
-                true,
-            )),
-        );
-
-        binary_manager.insert(
-            Binaries::GpuMinerMetal,
-            Mutex::new(BinaryManager::new(
-                Binaries::GpuMinerMetal.name().to_string(),
-                None,
-                Box::new(GithubReleasesAdapter {
-                    repo: "glytex".to_string(),
-                    owner: "tari-project".to_string(),
-                    specific_name: gpu_miner_metal_regex,
-                    binary_name: Some(Binaries::GpuMinerMetal.name().to_string()),
-                }),
-                None,
-                true,
-            )),
-        );
-
-        binary_manager.insert(
-            Binaries::GpuMinerOpenCL,
+            Binaries::GpuMiner,
             Mutex::new(BinaryManager::new(
                 Binaries::GpuMinerOpenCL.name().to_string(),
                 None,
                 Box::new(GithubReleasesAdapter {
                     repo: "glytex".to_string(),
                     owner: "tari-project".to_string(),
-                    specific_name: gpu_miner_opencl_regex,
-                    binary_name: Some(Binaries::GpuMinerOpenCL.name().to_string()),
+                    specific_name: gpuminer_specific_name,
                 }),
                 None,
                 true,
@@ -268,7 +163,11 @@ impl BinaryResolver {
             Mutex::new(BinaryManager::new(
                 Binaries::MergeMiningProxy.name().to_string(),
                 None,
-                Box::new(merge_mining_cdn_adapter),
+                Box::new(GithubReleasesAdapter {
+                    repo: "tari".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: None,
+                }),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
             )),
@@ -279,7 +178,11 @@ impl BinaryResolver {
             Mutex::new(BinaryManager::new(
                 Binaries::MinotariNode.name().to_string(),
                 None,
-                Box::new(minotari_node_cdn_adapter),
+                Box::new(GithubReleasesAdapter {
+                    repo: "tari".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: None,
+                }),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
             )),
@@ -290,7 +193,11 @@ impl BinaryResolver {
             Mutex::new(BinaryManager::new(
                 Binaries::Wallet.name().to_string(),
                 None,
-                Box::new(wallet_cdn_adapter),
+                Box::new(GithubReleasesAdapter {
+                    repo: "tari".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: None,
+                }),
                 Some(tari_prerelease_prefix.to_string()),
                 true,
             )),
@@ -301,7 +208,11 @@ impl BinaryResolver {
             Mutex::new(BinaryManager::new(
                 Binaries::ShaP2pool.name().to_string(),
                 None,
-                Box::new(sha_pool_default),
+                Box::new(GithubReleasesAdapter {
+                    repo: "sha-p2pool".to_string(),
+                    owner: "tari-project".to_string(),
+                    specific_name: None,
+                }),
                 None,
                 true,
             )),
@@ -312,7 +223,7 @@ impl BinaryResolver {
             Mutex::new(BinaryManager::new(
                 Binaries::Tor.name().to_string(),
                 Some("tor".to_string()),
-                Box::new(tor_default_adapter),
+                Box::new(TorReleaseAdapter {}),
                 None,
                 true,
             )),
