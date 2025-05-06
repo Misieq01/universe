@@ -379,13 +379,13 @@ impl BinaryResolver {
         }
 
         // Check if the files exist after download
-        let check_if_files_exist =
-            manager.check_if_files_for_version_exist(highest_version.clone());
-        if !check_if_files_exist {
-            manager
-                .download_selected_version(highest_version.clone(), progress_tracker.clone())
-                .await?;
-        }
+        // let check_if_files_exist =
+        //     manager.check_if_files_for_version_exist(highest_version.clone());
+        // if !check_if_files_exist {
+        //     manager
+        //         .download_selected_version(highest_version.clone(), progress_tracker.clone())
+        //         .await?;
+        // }
 
         // Throw error if files still do not exist
         let check_if_files_exist =

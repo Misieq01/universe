@@ -90,15 +90,15 @@ impl Binaries {
                 PathBuf::from(file_name)
             }
             Binaries::GpuMinerCuda => {
-                let file_name = "glytex-cuda";
+                let file_name = "glytex";
                 PathBuf::from(file_name)
             }
             Binaries::GpuMinerOpenCL => {
-                let file_name = "glytex-opencl";
+                let file_name = "glytex";
                 PathBuf::from(file_name)
             }
             Binaries::GpuMinerMetal => {
-                let file_name = "glytex-metal";
+                let file_name = "glytex";
                 PathBuf::from(file_name)
             }
             Binaries::Tor => {
