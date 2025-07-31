@@ -78,7 +78,7 @@ export const convertEthAddressToTariAddress = async (ethAddress: string, exchang
         });
 
         await invoke('save_wxtm_eth_address', {
-            tariAddress: encodedTariAddress,
+            etherumAddress: encodedTariAddress,
             exchangeId: exchangeId,
         });
 

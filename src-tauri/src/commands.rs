@@ -2291,12 +2291,12 @@ pub async fn encode_payment_id_to_address(
 
 #[tauri::command]
 pub async fn save_wxtm_eth_address(
-    tari_address: String,
+    etherum_address: String,
     exchange_id: String,
 ) -> Result<(), String> {
     ConfigWallet::update_field(
         ConfigWalletContent::add_wxtm_eth_address,
-        (exchange_id, tari_address),
+        (exchange_id, etherum_address),
     )
     .await
     .map_err(|e| e.to_string())?;

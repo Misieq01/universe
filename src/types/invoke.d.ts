@@ -145,6 +145,6 @@ declare module '@tauri-apps/api/core' {
     ): Promise<string>;
     function invoke(
         param: 'save_wxtm_eth_address',
-        payload: { tariAddress: string; exchangeId: string }
+        payload: { etherumAddress: string; exchangeId: string }
     ): Promise<void>;
 }
